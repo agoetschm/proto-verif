@@ -3,7 +3,7 @@ import Term._
 // case class Fact(pred: Id, msgs: Seq[Term])
 
 // to simplify the algorithm, we assume here that a fact only contains one term
-case class Fact private (fdef: Fact.Def, msg: Term)
+case class Fact private (factDef: Fact.Def, msg: Term)
 
 object Fact:
   case class Def(pred: Id):
@@ -14,4 +14,4 @@ case class Clause(hypos: Set[Fact], concl: Fact):
     val s = Term.getSubstitution(this.concl.msg, that.concl.msg)
     s match
       case None    => false
-      case Some(s) => this.hypos.map(f => f.fdef(s(f.msg))).subsetOf(that.hypos)
+      case Some(s) => this.hypos.map(s(_)).subsetOf(that.hypos)

@@ -18,12 +18,12 @@ object Unification:
         (t1, t2) match
           // delete
           case (_, _) if t1 == t2 => unifier0(ts, s)
-          case (Var(_), Var(_))   => None
           // swap
-          case (_, Var(_)) => unifier0((t2, t1) :: ts, s)
+          case (Name(_, _), Var(_)) | (Func(_, _), Var(_)) =>
+            unifier0((t2, t1) :: ts, s)
           // eliminate
           case (v: Var, _) =>
-            if t2.vars contains v then None
+            if t2.vars contains v then None // no recursive term
             else
               s.extend(v, t2) match
                 case Left(_) => None

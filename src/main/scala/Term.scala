@@ -64,6 +64,8 @@ case class Substitution(subs: Map[Var, Term]):
       case n: Name => n.ndef(n.msgs.map(this(_))*)
       case f: Func => f.fdef(f.msgs.map(this(_))*)
 
+  def apply(f: Fact): Fact = f.factDef(this(f.msg))
+
   def merge(that: Substitution): Either[Error, Substitution] =
     // val onlyThis = this.subs.keySet.diff(that.subs.keySet)
     val thisAndThat = this.subs.keySet.intersect(that.subs.keySet)
