@@ -9,7 +9,6 @@ object Fact:
   case class Def(pred: Id):
     def apply(m: Term): Fact = Fact(this, m)
 
-// TODO ensure that the conlusion does not contain variables not in hypothesis
 case class Clause(hypos: Set[Fact], concl: Fact):
   def doesSubsume(that: Clause): Boolean =
     val s = Term.getSubstitution(this.concl.msg, that.concl.msg)

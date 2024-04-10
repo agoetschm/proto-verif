@@ -28,17 +28,11 @@ class MySuite extends munit.FunSuite {
     val t2 = senc(x, foo(x, x))
     val s = Term.getSubstitution(t1, t2)
     assert(s.isEmpty)
-  }
 
-  test("no substitution tricky") {
-    val senc = Func.Def("senc", 2)
-    val foo = Func.Def("foo", 2)
-    val x = Var("x")
-
-    val t1 = senc(x, x)
-    val t2 = senc(x, foo(x, x))
-    val s = Term.getSubstitution(t1, t2)
-    assert(s.isEmpty)
+    val t3 = senc(x, x)
+    val t4 = senc(x, foo(x, x))
+    val s2 = Term.getSubstitution(t3, t4)
+    assert(s2.isEmpty)
   }
 
   test("subsumption") {
