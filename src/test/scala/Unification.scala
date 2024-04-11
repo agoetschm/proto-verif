@@ -1,7 +1,7 @@
 import Term._
 
 class UnificationTest extends munit.FunSuite {
-  test("simple unification") {
+  test("simple") {
     val a = Func.Def("a", 2)
     val b = Func.Def("b", 1)
     val x = Var("x")

@@ -10,11 +10,3 @@
   val ability = Clause(hypos = Set(att(x), att(k)), concl = att(senc(x, k)))
   val mm = m()
   println(ability)
-
-def saturate(cs: Set[Clause]): Set[Clause] = ???
-
-def isDerivable(f: Fact, cs: Set[Clause]): Boolean = ???
-
-def isSubsumption(r1: Clause, r2: Clause): Boolean =
-  // identify holes
-  ???

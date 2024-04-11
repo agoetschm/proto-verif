@@ -32,8 +32,8 @@ object Unification:
                   unifier0(ts.map((t1, t2) => (ss(t1), ss(t2))), extendedS)
           // decompose
           case (Name(ndef1, msgs1), Name(ndef2, msgs2)) if ndef1 == ndef2 =>
-            unifier0(ts.appendedAll(msgs1.zip(msgs2)), s)
+            unifier0(msgs1.zip(msgs2) ::: ts, s)
           case (Name(_, _), _) => None
           case (Func(fdef1, msgs1), Func(fdef2, msgs2)) if fdef1 == fdef2 =>
-            unifier0(ts.appendedAll(msgs1.zip(msgs2)), s)
+            unifier0(msgs1.zip(msgs2) ::: ts, s)
           case (Func(_, _), _) => None

@@ -1,4 +1,5 @@
 import Term._
+import Substitution.getSubstitution
 
 // case class Fact(pred: Id, msgs: Seq[Term])
 
@@ -11,7 +12,7 @@ object Fact:
 
 case class Clause(hypos: Set[Fact], concl: Fact):
   def doesSubsume(that: Clause): Boolean =
-    val s = Term.getSubstitution(this.concl.msg, that.concl.msg)
+    val s = getSubstitution(this.concl.msg, that.concl.msg)
     s match
       case None    => false
       case Some(s) => this.hypos.map(s(_)).subsetOf(that.hypos)
