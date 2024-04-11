@@ -1,6 +1,6 @@
 import Term._
 
-class UnificationTest extends munit.FunSuite {
+class UnificationSpec extends munit.FunSuite {
   test("simple") {
     val a = Func.Def("a", 2)
     val b = Func.Def("b", 1)

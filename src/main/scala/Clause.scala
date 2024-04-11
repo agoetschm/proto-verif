@@ -11,7 +11,7 @@ object Fact:
     def apply(m: Term): Fact = Fact(this, m)
 
 case class Clause(hypos: Set[Fact], concl: Fact):
-  def doesSubsume(that: Clause): Boolean =
+  def subsumes(that: Clause): Boolean =
     val s = getSubstitution(this.concl.msg, that.concl.msg)
     s match
       case None    => false

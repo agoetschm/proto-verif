@@ -1,7 +1,7 @@
 import Term._
 import Substitution.getSubstitution
 
-class ClauseTest extends munit.FunSuite {
+class ClauseSpec extends munit.FunSuite {
   test("subsumption") {
     val foo = Func.Def("foo", 1)
     val bar = Func.Def("bar", 1)
@@ -12,7 +12,7 @@ class ClauseTest extends munit.FunSuite {
     val r1 = Clause(hypos = Set(att(foo(x))), concl = att(x))
     val r2 = Clause(hypos = Set(att(foo(y)), att(bar(y))), concl = att(y))
 
-    assert(r1.doesSubsume(r2))
-    assert(!r2.doesSubsume(r1))
+    assert(r1.subsumes(r2))
+    assert(!r2.subsumes(r1))
   }
 }

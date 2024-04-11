@@ -5,8 +5,8 @@ type Id = String
 sealed abstract class Term(id: Id):
   lazy val vars: Set[Var] = this match
     case v: Var        => Set(v)
-    case Name(_, msgs) => msgs.map(_.vars).reduce(_ ++ _)
-    case Func(_, msgs) => msgs.map(_.vars).reduce(_ ++ _)
+    case Name(_, msgs) => msgs.map(_.vars).foldLeft(Set())(_ ++ _)
+    case Func(_, msgs) => msgs.map(_.vars).foldLeft(Set())(_ ++ _)
   lazy val closed: Boolean = vars.isEmpty
   lazy val open = !closed
 
@@ -15,7 +15,7 @@ object Term:
   case class Name private (ndef: Name.Def, msgs: List[Term])
       extends Term(ndef.id)
   object Name:
-    case class Def(id: Id, arity: Int):
+    case class Def(id: Id, arity: Int = 0):
       def apply(params: Term*): Term.Name =
         require(params.length == arity)
         Name(this, params.toList)

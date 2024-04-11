@@ -44,19 +44,25 @@ object Substitution:
       case (Name(ndef1, msgs1), Name(ndef2, msgs2)) =>
         if ndef1 == ndef2 then
           msgs1
-            .zip(msgs2)
-            .map(getSubstitution)
-            .reduce:
-              case (Some(s1), Some(s2)) => s1.merge(s2).toOption
-              case _                    => None
+            .zip(msgs2) match
+            case Nil => Some(Substitution.empty)
+            case args =>
+              args
+                .map(getSubstitution)
+                .reduce:
+                  case (Some(s1), Some(s2)) => s1.merge(s2).toOption
+                  case _                    => None
         else None
       case (Func(fdef1, msgs1), Func(fdef2, msgs2)) =>
         if fdef1 == fdef2 then
           msgs1
-            .zip(msgs2)
-            .map(getSubstitution)
-            .reduce:
-              case (Some(s1), Some(s2)) => s1.merge(s2).toOption
-              case _                    => None
+            .zip(msgs2) match
+            case Nil => Some(Substitution.empty)
+            case args =>
+              args
+                .map(getSubstitution)
+                .reduce:
+                  case (Some(s1), Some(s2)) => s1.merge(s2).toOption
+                  case _                    => None
         else None
       case _ => None

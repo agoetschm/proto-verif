@@ -1,7 +1,7 @@
 import Term._
 import Substitution.getSubstitution
 
-class SubstitutionTest extends munit.FunSuite {
+class SubstitutionSpec extends munit.FunSuite {
   test("t1.getSubstitution(t2).apply(t2) == t2") {
     val senc = Func.Def("senc", 2)
     val foo = Func.Def("foo", 2)
