@@ -10,6 +10,15 @@ sealed abstract class Term(id: Id):
   lazy val closed: Boolean = vars.isEmpty
   lazy val open = !closed
 
+  override def toString(): String = this match
+    case v: Var => v.id.toString()
+    case Name(ndef, msgs) =>
+      val argsStr = msgs.map(_.toString()).mkString(", ")
+      s"${ndef.id}($argsStr)"
+    case Func(fdef, msgs) =>
+      val argsStr = msgs.map(_.toString()).mkString(", ")
+      s"${fdef.id}($argsStr)"
+
 object Term:
   case class Var(id: Id) extends Term(id)
   case class Name private (ndef: Name.Def, msgs: List[Term])

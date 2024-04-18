@@ -4,22 +4,6 @@ import Term._
 
 object Derivation:
 
-  // def resolution(r1: Clause, r2: Clause): Option[Clause] =
-  //   val concl1 = r1.concl.msg
-  //   @tailrec def checkHypo(hyposLeft: Iterator[Fact]): Option[Clause] =
-  //     hyposLeft.nextOption() match
-  //       case None       => None
-  //       case Some(hypo) =>
-  //         // println(s"checkHypo($hypo)")
-  //         unifier(hypo.msg, concl1) match
-  //           case None        => checkHypo(hyposLeft)
-  //           case Some(subst) =>
-  //             // println(s"  unifier: $subst")
-  //             val newHypos = (r1.hypos ++ (r2.hypos - hypo)).map(subst(_))
-  //             val newConcl = subst(r2.concl)
-  //             Some(Clause(newHypos, newConcl))
-  //   checkHypo(r2.hypos.toIterator)
-
   def resolution(
       sel: Clause => Option[Fact] // selects one of the hypothesis, if any
   )(r1: Clause, r2: Clause): Option[Clause] =
@@ -85,41 +69,38 @@ object Derivation:
     )
 
   def derivable0(f: Fact, rules: List[Clause]): Boolean =
-    @tailrec def firstResolution(
-        r: Clause,
-        rulesLeft: List[Clause]
-    ): Option[Clause] =
-      rulesLeft match
-        case Nil => None
-        case rp :: rulesLeft =>
-          basicResolution(rp, r) match
-            case None        => firstResolution(r, rulesLeft)
-            case Some(resol) => Some(resol)
 
-    @tailrec def derive(
+    def derive(
         r: Clause,
-        history: List[Clause]
-    ): Option[Clause] =
-      println("-------------------------- derive") // TODO remove
-      pprint.pprintln(history)
-      if history.exists(_.subsumes(r)) then
-        println("  fail because subsumption loop") // TODO remove
-        pprint.pprintln(r)
-        None // fail because subsumption loop
+        history: List[Clause],
+        depth: Int
+    ): Set[Clause] =
+      println(s"-------------------------- derive depth=$depth") // TODO remove
+      println("history:")
+      history.foreach(println)
+      if depth > 10 then Set()
+      else if history.exists(_.subsumes(r)) then
+        println("  subsumption loop") // TODO remove
+        println(s"    r: $r")
+        Set() // stop here because subsumption loop
       else if selectFirstHypo(r).isEmpty then
         println(
-          "  succeed because all hypothesis of are resolved"
+          "  all hypothesis of are resolved"
         ) // TODO remove
-        Some(r) // succeed because all hypothesis of are resolved
+        Set(r) // all hypothesis of are resolved
       else
-        firstResolution(r, rules) match
-          case None =>
-            println("  fail because no hypothesis is resolvable") // TODO remove
-            pprint.pprintln(r)
-            None // fail because no hypothesis is resolvable
-          case Some(resol) => derive(resol, r :: history)
+        rules.foldLeft(Set(): Set[Clause])((acc, rp) =>
+          if acc.size >= 1 then acc
+          else
+            basicResolution(rp, r)
+              .map(resol => derive(resol, r :: history, depth = depth + 1))
+              .getOrElse(Set())
+        )
 
-    derive(Clause(Set(f), f), List()).isDefined
+    val derivations = derive(Clause(Set(f), f), List(), depth = 0)
+    println(s"-------------------------- done") // TODO remove
+    println(derivations)
+    derivations.nonEmpty
 
   // combine two functions above
   def derivable(f: Fact, rules: Set[Clause]): Boolean =
