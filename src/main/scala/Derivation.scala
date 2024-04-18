@@ -1,4 +1,4 @@
-import Unification.unifier
+import Unification.unify
 import scala.annotation.tailrec
 import Term._
 
@@ -7,13 +7,15 @@ object Derivation:
   def resolution(
       sel: Clause => Option[Fact] // selects one of the hypothesis, if any
   )(r1: Clause, r2: Clause): Option[Clause] =
+    val r2p = r2.withVarsDifferentFrom(r1)
+    println(s"resolve: r1=$r1 r2=$r2p") // TODO remove
     for
-      hypo <- sel(r2)
-      subst <- unifier(hypo.msg, r1.concl.msg)
+      hypo <- sel(r2p)
+      unifier <- unify(hypo.msg, r1.concl.msg)
     yield
-      // println(s"  unifier: $subst")
-      val newHypos = (r1.hypos ++ (r2.hypos - hypo)).map(subst(_))
-      val newConcl = subst(r2.concl)
+      println(s"  unifier: $unifier")
+      val newHypos = (r1.hypos ++ (r2p.hypos - hypo)).map(unifier(_))
+      val newConcl = unifier(r2p.concl)
       Clause(newHypos, newConcl)
 
   // selects the first hypothesis which is not a variable
@@ -52,8 +54,9 @@ object Derivation:
         rSel <- rsSel
         rFree <- rsFree
       yield basicResolution(rFree, rSel)
-      println("------ new resolutions")
-      pprint.pprintln(rsNew.flatten)
+      println("------ saturate0: new resolutions")
+      rsNew.flatten.foreach(println)
+      println("------------------")
       val (rsSelNew, rsFreeNew) =
         rsNew.flatten.partition(selectFirstHypo(_).isDefined)
       val rsSelNext = rsSelNew.foldRight(rsSel)(add)
@@ -105,5 +108,5 @@ object Derivation:
   // combine two functions above
   def derivable(f: Fact, rules: Set[Clause]): Boolean =
     val rs = saturate(rules).toList
-    pprint.pprintln(rs) // TODO remove
+    // pprint.pprintln(rs) // TODO remove
     derivable0(f, rs)

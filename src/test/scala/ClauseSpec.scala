@@ -15,4 +15,16 @@ class ClauseSpec extends munit.FunSuite {
     assert(r1.subsumes(r2))
     assert(!r2.subsumes(r1))
   }
+
+  test("withVarsDifferentFrom") {
+    val foo = Func.Def("foo", 1)
+    val bar = Func.Def("bar", 1)
+    val x = Var("x")
+    val att: Fact.Def = Fact.Def("att")
+
+    val r1 = Clause(hypos = Set(att(foo(x))), concl = att(x))
+    val r2 = r1.withVarsDifferentFrom(r1)
+
+    assertEquals(r2.vars, Set(Var("x", version = 1)))
+  }
 }

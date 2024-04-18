@@ -4,10 +4,13 @@ case class Substitution(subs: Map[Var, Term]):
   def apply(t: Term): Term =
     t match
       case v: Var  => if (subs.contains(v)) subs(v) else v
-      case n: Name => n.ndef(n.msgs.map(this(_))*)
-      case f: Func => f.fdef(f.msgs.map(this(_))*)
+      case n: Name => n.ndef(n.msgs.map(apply)*)
+      case f: Func => f.fdef(f.msgs.map(apply)*)
 
-  def apply(f: Fact): Fact = f.factDef(this(f.msg))
+  def apply(f: Fact): Fact = f.factDef(apply(f.msg))
+
+  def apply(r: Clause): Clause =
+    Clause(hypos = r.hypos.map(apply), concl = apply(r.concl))
 
   def merge(that: Substitution): Either[Error, Substitution] =
     // val onlyThis = this.subs.keySet.diff(that.subs.keySet)
@@ -39,8 +42,8 @@ object Substitution:
   def getSubstitution(t1: Term, t2: Term): Option[Substitution] =
     // println(s"getSubstitution($t1, $t2)")
     (t1, t2) match
-      case (v @ Var(_), t) => Some(Substitution.single(v, t))
-      case (_, Var(_))     => None
+      case (v: Var, t) => Some(Substitution.single(v, t))
+      case (_, _: Var) => None
       case (Name(ndef1, msgs1), Name(ndef2, msgs2)) =>
         if ndef1 == ndef2 then
           msgs1

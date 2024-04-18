@@ -60,28 +60,7 @@ class DerivationSpec extends munit.FunSuite {
   //   assert(rs.contains(Clause(???, ???)))
   // }
 
-  test("derivable0") {
-    val senc = Func.Def("senc", 2)
-    val sdec = Func.Def("sdec", 2)
-    val att = Fact.Def("att")
-    val x = Var("x")
-    val y = Var("y")
-
-    // rules
-    val r1 = Clause(Set(att(x), att(y)), att(senc(x, y)))
-    val r2 = Clause(Set(att(x), att(y)), att(sdec(x, y)))
-    val r3 = Clause(Set(att(sdec(senc(x, y), y)), att(y)), att(x))
-    // initial knowledge
-    val m = Name.Def("m")()
-    val k = Name.Def("k")()
-    val k1 = Clause(Set(), att(k))
-    val k2 = Clause(Set(), att(senc(m, k)))
-
-    assert(Derivation.derivable0(att(m), List(r1, r2, r3, k1, k2)))
-    assert(!Derivation.derivable0(att(m), List(r1, r2, r3, k2)))
-  }
-
-  // test("derivable") {
+  // test("derivable0") {
   //   val senc = Func.Def("senc", 2)
   //   val sdec = Func.Def("sdec", 2)
   //   val att = Fact.Def("att")
@@ -98,7 +77,28 @@ class DerivationSpec extends munit.FunSuite {
   //   val k1 = Clause(Set(), att(k))
   //   val k2 = Clause(Set(), att(senc(m, k)))
 
-  //   assert(derivable(att(m), Set(r1, r2, r3, k1, k2)))
-  //   // assert(!derivable(att(m), Set(r1,r2,r3,k2)))
+  //   assert(Derivation.derivable0(att(m), List(r1, r2, r3, k1, k2)))
+  //   assert(!Derivation.derivable0(att(m), List(r1,r2,r3,k2)))
   // }
+
+  test("derivable") {
+    val senc = Func.Def("senc", 2)
+    val sdec = Func.Def("sdec", 2)
+    val att = Fact.Def("att")
+    val x = Var("x")
+    val y = Var("y")
+
+    // rules
+    val r1 = Clause(Set(att(x), att(y)), att(senc(x, y)))
+    val r2 = Clause(Set(att(x), att(y)), att(sdec(x, y)))
+    val r3 = Clause(Set(att(sdec(senc(x, y), y)), att(y)), att(x))
+    // initial knowledge
+    val m = Name.Def("m")()
+    val k = Name.Def("k")()
+    val k1 = Clause(Set(), att(k))
+    val k2 = Clause(Set(), att(senc(m, k)))
+
+    assert(derivable(att(m), Set(r1, r2, r3, k1, k2)))
+    // assert(!derivable(att(m), Set(r1,r2,r3,k2)))
+  }
 }
