@@ -31,9 +31,9 @@ object Unification:
                   val ss = Substitution.single(v, t2)
                   unify0(ts.map((t1, t2) => (ss(t1), ss(t2))), extendedS)
           // decompose
-          case (Name(ndef1, msgs1), Name(ndef2, msgs2)) if ndef1 == ndef2 =>
-            unify0(msgs1.zip(msgs2) ::: ts, s)
+          case (Name(ndef1, args1), Name(ndef2, args2)) if ndef1 == ndef2 =>
+            unify0(args1.zip(args2) ::: ts, s)
           case (Name(_, _), _) => None
-          case (Func(fdef1, msgs1), Func(fdef2, msgs2)) if fdef1 == fdef2 =>
-            unify0(msgs1.zip(msgs2) ::: ts, s)
+          case (Func(fdef1, args1), Func(fdef2, args2)) if fdef1 == fdef2 =>
+            unify0(args1.zip(args2) ::: ts, s)
           case (Func(_, _), _) => None

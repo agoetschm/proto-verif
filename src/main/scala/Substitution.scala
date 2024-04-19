@@ -4,8 +4,8 @@ case class Substitution(subs: Map[Var, Term]):
   def apply(t: Term): Term =
     t match
       case v: Var  => if (subs.contains(v)) subs(v) else v
-      case n: Name => n.ndef(n.msgs.map(apply)*)
-      case f: Func => f.fdef(f.msgs.map(apply)*)
+      case n: Name => n.ndef(n.args.map(apply)*)
+      case f: Func => f.fdef(f.args.map(apply)*)
 
   def apply(f: Fact): Fact = f.factDef(apply(f.msg))
 
@@ -48,10 +48,10 @@ object Substitution:
     (t1, t2) match
       case (v: Var, t) => Some(Substitution.single(v, t))
       case (_, _: Var) => None
-      case (Name(ndef1, msgs1), Name(ndef2, msgs2)) =>
+      case (Name(ndef1, args1), Name(ndef2, args2)) =>
         if ndef1 == ndef2 then
-          msgs1
-            .zip(msgs2) match
+          args1
+            .zip(args2) match
             case Nil => Some(Substitution.empty)
             case args =>
               args
@@ -60,10 +60,10 @@ object Substitution:
                   case (Some(s1), Some(s2)) => s1.merge(s2).toOption
                   case _                    => None
         else None
-      case (Func(fdef1, msgs1), Func(fdef2, msgs2)) =>
+      case (Func(fdef1, args1), Func(fdef2, args2)) =>
         if fdef1 == fdef2 then
-          msgs1
-            .zip(msgs2) match
+          args1
+            .zip(args2) match
             case Nil => Some(Substitution.empty)
             case args =>
               args

@@ -85,7 +85,7 @@ class DerivationSpec extends munit.FunSuite {
     val k2 = Clause(Set(), att(senc(m, k)))
 
     assert(Derivation.derivable0(att(m), List(r1, r2, r3, k1, k2)))
-    assert(!Derivation.derivable0(att(m), List(r1,r2,r3,k2)))
+    assert(!Derivation.derivable0(att(m), List(r1, r2, r3, k2)))
   }
 
   test("derivable") {

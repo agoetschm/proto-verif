@@ -17,8 +17,10 @@ object Derivation:
       val newHypos = (r1.hypos ++ (r2p.hypos - hypo)).map(unifier(_))
       val newConcl = unifier(r2p.concl)
       val resolutionOf =
-        (if r1.resolutionOf.isEmpty then List(r1) else r1.resolutionOf.map(_.withoutResolutions)) :::
-          (if r2.resolutionOf.isEmpty then List(r2) else r2.resolutionOf.map(_.withoutResolutions))
+        (if r1.resolutionOf.isEmpty then List(r1)
+         else r1.resolutionOf.map(_.withoutResolutions)) :::
+          (if r2.resolutionOf.isEmpty then List(r2)
+           else r2.resolutionOf.map(_.withoutResolutions))
       Clause(newHypos, newConcl, resolutionOf)
 
   // selects the first hypothesis which is not a variable
