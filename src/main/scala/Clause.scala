@@ -21,7 +21,7 @@ case class Clause private (
   override def toString(): String =
     s"{${hypos.map(h => s"$h").mkString(",")}} => $concl" +
       (if resolutionOf.nonEmpty then
-         s" [resolution of: ${resolutionOf.map(_.toString()).mkString(",")}]"
+         s" [resolution of: ${resolutionOf.map(_.toString()).mkString(", ")}]"
        else "")
 
   def subsumes(that: Clause): Boolean =

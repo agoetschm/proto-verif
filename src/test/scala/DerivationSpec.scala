@@ -6,32 +6,32 @@ import Derivation.derivable
 import Derivation.basicResolution
 
 class DerivationSpec extends munit.FunSuite {
-  // test("resolution") {
-  //   val f = Func.Def("f", 1)
-  //   val g = Func.Def("g", 1)
-  //   val x = Var("x")
-  //   val y = Var("y")
-  //   val att = Fact.Def("att")
+  test("resolution") {
+    val f = Func.Def("f", 1)
+    val g = Func.Def("g", 1)
+    val x = Var("x")
+    val y = Var("y")
+    val att = Fact.Def("att")
 
-  //   val r1 = Clause(Set(att(x)), att(f(x)))
-  //   val r2 = Clause(Set(att(f(y))), att(g(y)))
-  //   val r3 = basicResolution(r1, r2).get
+    val r1 = Clause(Set(att(x)), att(f(x)))
+    val r2 = Clause(Set(att(f(y))), att(g(y)))
+    val r3 = basicResolution(r1, r2).get
 
-  //   assertEquals(r3, Clause(Set(att(x)), att(g(x))))
-  // }
+    assertEquals(r3.withoutResolutions, Clause(Set(att(x)), att(g(x))))
+  }
 
-  // test("resolution var collision") {
-  //   val f = Func.Def("f", 1)
-  //   val g = Func.Def("g", 1)
-  //   val x = Var("x")
-  //   val att = Fact.Def("att")
+  test("resolution var collision") {
+    val f = Func.Def("f", 1)
+    val g = Func.Def("g", 1)
+    val x = Var("x")
+    val att = Fact.Def("att")
 
-  //   val r1 = Clause(Set(att(x)), att(f(g(x))))
-  //   val r2 = Clause(Set(att(f(x))), att(g(x)))
-  //   val r3 = basicResolution(r1, r2).get
+    val r1 = Clause(Set(att(x)), att(f(g(x))))
+    val r2 = Clause(Set(att(f(x))), att(g(x)))
+    val r3 = basicResolution(r1, r2).get
 
-  //   assertEquals(r3, Clause(Set(att(x)), att(g(g(x)))))
-  // }
+    assertEquals(r3.withoutResolutions, Clause(Set(att(x)), att(g(g(x)))))
+  }
 
   test("saturate") {
     val f = Func.Def("f", 1)
@@ -52,20 +52,25 @@ class DerivationSpec extends munit.FunSuite {
     assertEquals(rs2.size, 3)
   }
 
-  // test("saturate should apply sdec") {
-  //   val senc = Func.Def("senc", 2)
-  //   val sdec = Func.Def("sdec", 2)
-  //   val att = Fact.Def("att")
-  //   val x = Var("x")
-  //   val y = Var("y")
+  test("saturate should apply sdec") {
+    val senc = Func.Def("senc", 2)
+    val sdec = Func.Def("sdec", 2)
+    val att = Fact.Def("att")
+    val x = Var("x")
+    val y = Var("y")
 
-  //   // rules
-  //   val r1 = Clause(Set(att(x), att(y)), att(senc(x, y)))
-  //   val r2 = Clause(Set(att(x), att(y)), att(sdec(x, y)))
+    // rules
+    val r1 = Clause(Set(att(x), att(y)), att(senc(x, y)))
+    val r2 = Clause(Set(att(x), att(y)), att(sdec(x, y)))
+    val r3 = Clause(Set(att(sdec(senc(x, y), y)), att(y)), att(x))
 
-  //   val rs = saturate(Set(r1, r2))
-  //   assert(rs.contains(Clause(Set(att(x), att(y)), att(sdec(senc(x, y), y)))))
-  // }
+    val rs = saturate(Set(r1, r2, r3))
+    assert(
+      rs.exists(r =>
+        r.withoutResolutions == Clause(Set(att(x), att(y)), att(x))
+      )
+    )
+  }
 
   test("derivable0") {
     val senc = Func.Def("senc", 2)
@@ -106,6 +111,6 @@ class DerivationSpec extends munit.FunSuite {
     val k2 = Clause(Set(), att(senc(m, k)))
 
     assert(derivable(att(m), Set(r1, r2, r3, k1, k2)))
-    // assert(!derivable(att(m), Set(r1,r2,r3,k2)))
+    assert(!derivable(att(m), Set(r1, r2, r3, k2)))
   }
 }
