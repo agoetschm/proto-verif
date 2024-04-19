@@ -10,7 +10,11 @@ case class Substitution(subs: Map[Var, Term]):
   def apply(f: Fact): Fact = f.factDef(apply(f.msg))
 
   def apply(r: Clause): Clause =
-    Clause(hypos = r.hypos.map(apply), concl = apply(r.concl))
+    Clause(
+      hypos = r.hypos.map(apply),
+      concl = apply(r.concl),
+      resolutionOf = r.resolutionOf
+    )
 
   def merge(that: Substitution): Either[Error, Substitution] =
     // val onlyThis = this.subs.keySet.diff(that.subs.keySet)

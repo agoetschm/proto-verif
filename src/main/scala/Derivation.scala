@@ -8,39 +8,34 @@ object Derivation:
       sel: Clause => Option[Fact] // selects one of the hypothesis, if any
   )(r1: Clause, r2: Clause): Option[Clause] =
     val r2p = r2.withVarsDifferentFrom(r1)
-    println(s"resolve: r1=$r1 r2=$r2p") // TODO remove
+    // println(s"resolve: r1=$r1 r2=$r2p") // TODO remove
     for
       hypo <- sel(r2p)
       unifier <- unify(hypo.msg, r1.concl.msg)
     yield
-      println(s"  unifier: $unifier")
+      // println(s"  unifier: $unifier")
       val newHypos = (r1.hypos ++ (r2p.hypos - hypo)).map(unifier(_))
       val newConcl = unifier(r2p.concl)
-      Clause(newHypos, newConcl)
+      val resolutionOf =
+        (if r1.resolutionOf.isEmpty then List(r1) else r1.resolutionOf.map(_.withoutResolutions)) :::
+          (if r2.resolutionOf.isEmpty then List(r2) else r2.resolutionOf.map(_.withoutResolutions))
+      Clause(newHypos, newConcl, resolutionOf)
 
   // selects the first hypothesis which is not a variable
   // corresponds to sel() function in paper
   def selectFirstHypo(r: Clause): Option[Fact] =
     r.hypos.collectFirst:
-      case f @ Fact(_, Name(_, _)) =>
-        // println(s"sel name") // TODO remove
-        // pprint.pprintln(r)
-        // pprint.pprintln(f)
-        f
-      case f @ Fact(_, Func(_, _)) =>
-        // println(s"sel func") // TODO remove
-        // pprint.pprintln(r)
-        // pprint.pprintln(f)
-        f
+      case f @ Fact(_, Name(_, _)) => f
+      case f @ Fact(_, Func(_, _)) => f
 
   def basicResolution = resolution(selectFirstHypo)
 
-  def saturate(rs: Set[Clause]): Set[Clause] =
-    // add a clause and remove subsumed ones
-    def add(r: Clause, rs: Set[Clause]): Set[Clause] =
-      if rs.exists(_.subsumes(r)) then rs
-      else rs.filter(!r.subsumes(_)) + r
+  /** add a clause and remove subsumed ones */
+  def add(r: Clause, rs: Set[Clause]): Set[Clause] =
+    if rs.exists(_.subsumes(r)) then rs
+    else rs.filter(!r.subsumes(_)) + r
 
+  def saturate(rs: Set[Clause]): Set[Clause] =
     val withoutSubsumed = rs.foldLeft(Set())((acc, r) => add(r, acc))
 
     // combine clauses to get as far as possible from variables only
@@ -54,16 +49,24 @@ object Derivation:
         rSel <- rsSel
         rFree <- rsFree
       yield basicResolution(rFree, rSel)
+      println() // TODO remove
       println("------ saturate0: new resolutions")
       rsNew.flatten.foreach(println)
-      println("------------------")
+      // println("------ saturate0: end new resolutions")
       val (rsSelNew, rsFreeNew) =
         rsNew.flatten.partition(selectFirstHypo(_).isDefined)
       val rsSelNext = rsSelNew.foldRight(rsSel)(add)
       val rsFreeNext = rsFreeNew.foldRight(rsFree)(add)
+      println("------ saturate0: rsSelNext")
+      rsSelNext.foreach(println)
+      println("------ saturate0: rsFreeNext")
+      rsFreeNext.foreach(println)
       // when fixed point: return free rules
       if rsSelNext == rsSel && rsFreeNext == rsFree
-      then rsFreeNext
+      then
+        println("------ saturate resulting clauses:")
+        rsFreeNext.foreach(println)
+        rsFreeNext
       else saturate0(rsSelNext, rsFreeNext)
 
     saturate0(
