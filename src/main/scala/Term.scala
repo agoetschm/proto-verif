@@ -27,6 +27,7 @@ object Term:
   case class Name private (ndef: Name.Def, args: List[Term])
       extends Term(ndef.id)
   object Name:
+    def apply(id: Id): Name = Def(id)()
     case class Def(id: Id, arity: Int = 0):
       def apply(args: Term*): Term.Name =
         require(args.length == arity)

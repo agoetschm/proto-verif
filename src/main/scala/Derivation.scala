@@ -106,8 +106,9 @@ object Derivation:
         )
 
     val derivations = derive(Clause(Set(f), f), List(), depth = 0)
-    println(s"-------------------------- done") // TODO remove
-    println(derivations)
+    println(s"-------------------------- derivation") // TODO remove
+    derivations.foreach(println)
+    println(s"--------------------------")
     derivations.nonEmpty
 
   // combine two functions above
