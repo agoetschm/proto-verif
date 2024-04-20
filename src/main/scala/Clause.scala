@@ -10,19 +10,25 @@ object Fact:
   case class Def(pred: Id):
     def apply(m: Term): Fact = Fact(this, m)
 
-    /** @param resolutionOf
-      *   contains history of resolutions performed resulting in this clause
-      */
+/** @param resolutionOf
+  *   contains history of resolutions performed resulting in this clause
+  */
 case class Clause private (
     hypos: Set[Fact],
     concl: Fact,
-    resolutionOf: List[Clause]
+    resolutionOf: Option[(Clause, Clause, Substitution)]
 ):
-  override def toString(): String =
-    s"{${hypos.map(h => s"$h").mkString(",")}} => $concl" +
-      (if resolutionOf.nonEmpty then
-         s" [resolution of: ${resolutionOf.map(_.toString()).mkString(", ")}]"
-       else "")
+  def display(prefix: String = ""): String =
+    (resolutionOf match
+      case Some((left, right, s)) =>
+        s"""${left.display(prefix + " |")}
+           #${right.display(prefix + " |")}
+           #$prefix ⊢""".stripMargin('#')
+      case None => prefix
+    ) +
+      s" {${hypos.map(h => s"${h}").mkString(",")}} => $concl"
+
+  override def toString(): String = display()
 
   def subsumes(that: Clause): Boolean =
     val s = getSubstitution(this.concl.msg, that.concl.msg)
@@ -47,13 +53,17 @@ case class Clause private (
     val subst = Substitution(renaming.toMap)
     subst(this)
 
-  def withoutResolutions = this.copy(resolutionOf = Nil)
+  def withoutResolution = this.copy(resolutionOf = None)
 
 object Clause:
   def apply(hypos: Set[Fact], concl: Fact): Clause =
-    apply(hypos, concl, resolutionOf = Nil)
+    apply(hypos, concl, resolutionOf = None)
 
-  def apply(hypos: Set[Fact], concl: Fact, resolutionOf: List[Clause]): Clause =
+  def apply(
+      hypos: Set[Fact],
+      concl: Fact,
+      resolutionOf: Option[(Clause, Clause, Substitution)]
+  ): Clause =
     // check that all variables in the conclusion are defined in the hypothesis
     // might be very costly
     require(

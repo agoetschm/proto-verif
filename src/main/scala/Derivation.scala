@@ -16,11 +16,7 @@ object Derivation:
       // println(s"  unifier: $unifier")
       val newHypos = (r1.hypos ++ (r2p.hypos - hypo)).map(unifier(_))
       val newConcl = unifier(r2p.concl)
-      val resolutionOf =
-        (if r1.resolutionOf.isEmpty then List(r1)
-         else r1.resolutionOf.map(_.withoutResolutions)) :::
-          (if r2.resolutionOf.isEmpty then List(r2)
-           else r2.resolutionOf.map(_.withoutResolutions))
+      val resolutionOf = Some((r1, r2, unifier))
       Clause(newHypos, newConcl, resolutionOf)
 
   // selects the first hypothesis which is not a variable
@@ -53,21 +49,21 @@ object Derivation:
       yield basicResolution(rFree, rSel)
       println() // TODO remove
       println("------ saturate0: new resolutions")
-      rsNew.flatten.foreach(println)
+      rsNew.flatten.foreach(r => println(r.withoutResolution))
       // println("------ saturate0: end new resolutions")
       val (rsSelNew, rsFreeNew) =
         rsNew.flatten.partition(selectFirstHypo(_).isDefined)
       val rsSelNext = rsSelNew.foldRight(rsSel)(add)
       val rsFreeNext = rsFreeNew.foldRight(rsFree)(add)
       println("------ saturate0: rsSelNext")
-      rsSelNext.foreach(println)
+      rsSelNext.foreach(r => println(r.withoutResolution))
       println("------ saturate0: rsFreeNext")
-      rsFreeNext.foreach(println)
+      rsFreeNext.foreach(r => println(r.withoutResolution))
       // when fixed point: return free rules
       if rsSelNext == rsSel && rsFreeNext == rsFree
       then
         println("------ saturate resulting clauses:")
-        rsFreeNext.foreach(println)
+        rsFreeNext.foreach(r => println(r.withoutResolution))
         rsFreeNext
       else saturate0(rsSelNext, rsFreeNext)
 
@@ -107,7 +103,7 @@ object Derivation:
 
     val derivations = derive(Clause(Set(f), f), List(), depth = 0)
     println(s"-------------------------- derivation") // TODO remove
-    derivations.foreach(println)
+    derivations.foreach(r => println(r))
     println(s"--------------------------")
     derivations.nonEmpty
 

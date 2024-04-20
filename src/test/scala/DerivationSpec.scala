@@ -145,13 +145,19 @@ class DerivationSpec extends munit.FunSuite {
       Clause(Set(), att(pk(ska))),
       Clause(Set(), att(pk(skb))),
       // protocol
-      Clause(Set(att(x)), att(aenc(pair(pk(ska), na(x)), x))),
+      Clause(Set(att(x)), att(aenc(pair(pk(ska), na(x)), x))), // 1
       Clause(
         Set(att(aenc(pair(x, y), pk(skb)))),
         att(aenc(pair(y, nb(y, x)), x))
-      ),
-      Clause(Set(att(x), att(aenc(pair(na(x), y), z))), att(aenc(y, x)))
+      ) // 2
+      // Clause(Set(att(x), att(aenc(pair(na(x), y), z))), att(aenc(y, x))) // 3
     )
+
+    // expected attack:
+    // C gets aenc(<pka, na>, pkc) with 1
+    // C gets aenc(<na,nb>, pka) with 2
+    // using previous, C gets aenc(nb, pkc)
+    // C applies adec to get nb
 
     assert(derivable(att(nb(x, y)), rs))
   }
