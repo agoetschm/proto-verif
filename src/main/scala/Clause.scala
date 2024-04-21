@@ -1,6 +1,7 @@
 import Term._
 import Substitution.getSubstitution
 import Derivation.resolution
+import scala.annotation.tailrec
 
 // to simplify the algorithm, we assume here that a fact only contains one term
 case class Fact private (factDef: Fact.Def, msg: Term):
@@ -16,17 +17,27 @@ object Fact:
 case class Clause private (
     hypos: Set[Fact],
     concl: Fact,
-    resolutionOf: Option[(Clause, Clause, Substitution)]
+    resolutionOf: Option[(Clause, Clause, Substitution)],
+    label: Option[String]
 ):
-  def display(prefix: String = ""): String =
+  def display(
+      path: List[Boolean] = Nil
+  ): String =
+    @tailrec def prefix(acc: String = "", p: List[Boolean]): String = p match
+      case Nil          => s"$acc"
+      case false :: Nil => s"$acc┌"
+      case true :: Nil  => s"$acc├" // ├ └
+      case false :: tl  => prefix(s"$acc ", tl)
+      case true :: tl   => prefix(s"$acc│", tl)
     (resolutionOf match
       case Some((left, right, s)) =>
-        s"""${left.display(prefix + " |")}
-           #${right.display(prefix + " |")}
-           #$prefix ⊢""".stripMargin('#')
-      case None => prefix
+        s"""${left.display(path :+ false)}
+           #${right.display(path :+ true)}
+           #${prefix(p = path)}""".stripMargin('#')
+      case None => s"${prefix(p = path)}"
     ) +
-      s" {${hypos.map(h => s"${h}").mkString(",")}} => $concl"
+      s"{${hypos.map(h => s"${h}").mkString(",")}} => $concl" +
+      label.map(l => s" [$l]").getOrElse("")
 
   override def toString(): String = display()
 
@@ -55,14 +66,16 @@ case class Clause private (
 
   def withoutResolution = this.copy(resolutionOf = None)
 
+  def withSubstitution(s: Substitution): Clause =
+    this.copy(hypos = hypos.map(s(_)), concl = s(concl))
+
 object Clause:
-  def apply(hypos: Set[Fact], concl: Fact): Clause =
-    apply(hypos, concl, resolutionOf = None)
 
   def apply(
       hypos: Set[Fact],
       concl: Fact,
-      resolutionOf: Option[(Clause, Clause, Substitution)]
+      resolutionOf: Option[(Clause, Clause, Substitution)] = None,
+      label: Option[String] = None
   ): Clause =
     // check that all variables in the conclusion are defined in the hypothesis
     // might be very costly
@@ -75,4 +88,4 @@ object Clause:
           .contains
       )
     )
-    new Clause(hypos, concl, resolutionOf)
+    new Clause(hypos, concl, resolutionOf, label)

@@ -145,12 +145,21 @@ class DerivationSpec extends munit.FunSuite {
       Clause(Set(), att(pk(ska))),
       Clause(Set(), att(pk(skb))),
       // protocol
-      Clause(Set(att(x)), att(aenc(pair(pk(ska), na(x)), x))), // 1
+      Clause(
+        Set(att(x)),
+        att(aenc(pair(pk(ska), na(x)), x)),
+        label = Some("1")
+      ),
       Clause(
         Set(att(aenc(pair(x, y), pk(skb)))),
-        att(aenc(pair(y, nb(y, x)), x))
-      ) // 2
-      // Clause(Set(att(x), att(aenc(pair(na(x), y), z))), att(aenc(y, x))) // 3
+        att(aenc(pair(y, nb(y, x)), x)),
+        label = Some("2")
+      ),
+      Clause(
+        Set(att(x), att(aenc(pair(na(x), y), z))),
+        att(aenc(y, x)),
+        label = Some("3")
+      )
     )
 
     // expected attack:
