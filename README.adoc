@@ -1,0 +1,101 @@
+= Attempting to re-implement ProVerif in Scala - an introduction to protocol verification
+
+NOTE: I'm not an expert in the domain, just tried to get a deeper understanding of protocol verification by developing a very basic and incomplete implementation of ProVerif, and I'm sharing my experience here. The intro is meant for someone with a software engineer background but no knowledge about formal verification.
+
+// Once upon a time, Alice and Bob were madly in love but living in very distant cities.
+// The only way for them to express their affection was to write each other letters.
+// Unfortunatley, the postman was also in love with Alice.
+// He opened all the exchanged letters and would not deliver them if their content was making him jealous.
+
+// Luckily, Alice and Bob managed to agree on a technique to exchange encryption keys and 
+
+[quote]
+Once upon a time, Alice and Bob were living in a country under a dictatorship and wanted to exchange letters imagining a better government.
+Since they knew that the postman was opening and reading their mail, they needed to conceal the messages.
+Luckily, Alice and Bob had some knowledge in cryptography and managed to exchange their public keys in person, allowing them to encrypt messages with their respective private key. 
+//But what if they hadn't managed to exchange their keys?
+
+.Protocol where Alice uses Bob's public key to encrypt a message. `aenc` and `adec` stand for asymmetric encryption and decryption, `sk` and `pk` represent a pair of secret and public keys.
+image::images/proto-simple.png[][Simple protocol,400]
+
+== Why do protocols need to be verified?
+
+// protocols can be complex and what they achieve is not obvious
+The simple (and not very useful...) message exchange above can easily be described with an "Alice-and-Bob" specification.
+When looking at the diagram, it is quite clear that an adversary eavesdropping on the communication channel cannot learn the content of the message `+m+`. Assuming that the adversary doesn't have access to the secure channel and that https://en.wikipedia.org/wiki/Public-key_cryptography[public key cryptography] is not broken of course.
+
+But this becomes less obvious when looking at a more complex protocol, like for example the https://signal.org/docs/specifications/doubleratchet/[double ratchet] used in the https://en.wikipedia.org/wiki/Signal_Protocol[Signal protocol], which is also used in Whatsapp.
+To understand what *security properties* hold or not in this kind of cases, the research field of *protocol verification* formally models protocols and attempts to prove whether certain properties are guaranteed [<<Blanchet2012>>]. 
+
+
+== How can protocols be verified?
+
+*Security properties*.
+Verifying the secrecy of messages is one thing, but there is actually a variety of properties which can be desirable in a protocol.
+For example, Alice might want to make sure that she is indeed getting a message from Bob and not from someone pretending to be him. 
+This property is called https://en.wikipedia.org/wiki/Mutual_authentication[authentication].
+Another example I personally encountered is the https://eprint.iacr.org/2016/287[verifiability in electronic voting systems].
+
+
+*Modeling protocols*.
+Before being able to prove formally the property of a protocol, it needs to be modeled mathematically.
+Two main types of models exist, the *computational* model and *symbolic* model (see [<<Blanchet2012>>], it's a good overview of the topic).
+We focus here on proofs in the symbolic model, where certain cryptographic primitives are idealized (e.g. encryption is perfect) in order to allow a simpler but deeper analysis.
+
+=== Example: modeling Needham Schroeder key exchange with the applied pi calculus
+To get a more concrete feeling of what a formal model actually is, let's look at a simple yet real example: the https://en.wikipedia.org/wiki/Needham%E2%80%93Schroeder_protocol[Needham-Schroeder] public key protocol, which aims to provide mutual authentication.
+This protocol is the classical example in the context of protocol verification, you can for example have a look at section 5.2 of https://inria.hal.science/hal-01090874v1/file/CK-fntpl-14.pdf[this tutorial] [<<Cortier2014>>].
+
+*The protocol*.
+The idea is that Alice and Bob exchange https://en.wikipedia.org/wiki/Cryptographic_nonce[nonces] (n~a~ and n~b~) encrypted with the public key of the recipient (pk~a~ and pk~b~), which lets make sure that they are indeed communicating with each other.
+
+.Needham Schroeder protocol. The first message is the encryption of the pair (pk~a~, n~a~), which represent Alice's public key and nonce, with Bob's public key. The other messages follow the same pattern.
+image::images/proto-needham.png[][Needham Schroeder protocol,400]
+
+*Protocol as processes*.
+The issue with the representation above is that some things are left implicit.
+For example, what happens if a message is not valid is not defined, or how the nonces are generated either.
+To allow the analysis of such a protocol, it has to be first specified using a *precise syntax*.
+One such formalization is the *applied pi calculus* [<<Abadi2017>>], where a protocol is modelled as a collection of processes.
+Without giving too many details, below are the processes for Alice and Bob executing the Needham Schroeder protocol (see Chapter 5 of [<<Cortier2014>>] for more details).
+
+.The process of an agent in the role of Alice. `out(c,m)` is a function that outputs the message `m` on channel `c`. `pk` is a function that derives a public key from a private one. `fst` and `snd` return the first and second element of a pair, e.g., `snd( (a,b) )` returns `b`.
+----
+Pa(ska,pkb) = new(na)
+              out(c,aenc((pk(ska),na),pkb))
+              in(c,x)
+              if fst(adec(x,ska)) = a then
+              let nb = snd(adec(x,ska)) in
+              out(c,aenc(nb,pkb))
+----
+
+.The process of an agent in the role of Bob.
+----
+Pb(skb)     = in(c,y)
+              let pka = fst(adec(y,skb))
+              let na = snd(adec(y,skb))
+              new(nb)
+              out(c,aenc((na,nb),pka))
+              in(c,z)
+              if fst(adec(z,skb)) = a then continue
+----
+
+When executed in parallel, these two processes execute the Needham Schroeder protocol.
+
+
+== ProVerif
+
+The interest of modeling protocols using a formal model, as we did above using the applied pi calculus, is to analyze them in order to check whether they fullfill some properties.
+In this section, we are going to take a look at the ProVerif protocol verifier [<<Blanchet2011>>] and run a simplified implementation to analyze the Needham Schroeder protocol to detect the https://doi.org/10.1016/0020-0190(95)00144-2[well-known attack by Lowe].
+
+// * overview 
+
+
+
+[bibliography]
+== References
+
+* [[[Blanchet2012]]] B Blanchet. *Security protocol verification: Symbolic and computational models*. International conference on principles of security and trust. 2012. https://inria.hal.science/hal-00863388/file/BlanchetETAPS12.pdf[View].
+* [[[Cortier2014]]] V Cortier, S Kremer. *Formal Models and Techniques for Analyzing Security Protocols: A Tutorial*. Foundations and Trends in Programming Languages. 2014. http://dx.doi.org/10.1561/2500000001[View].
+* [[[Abadi2017]]] M Abadi, B Blanchet, C Fournet. *The applied pi calculus: Mobile values, new names, and secure communication*. Journal of ACM. 2017. http://seclab.stanford.edu/pcl/cs259/WWW06/papers/p104-abadi.pdf[View].
+* [[[Blanchet2011]]] B Blanchet. *Using Horn clauses for analyzing security protocols*. Formal Models and Techniques for Analyzing Security Protocols. 2011.
