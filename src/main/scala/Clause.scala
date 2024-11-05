@@ -12,7 +12,7 @@ object Fact:
     def apply(m: Term): Fact = Fact(this, m)
 
 /** @param resolutionOf
-  *   contains history of resolutions performed resulting in this clause
+  *   contains the history of resolutions performed resulting in this clause
   */
 case class Clause private (
     hypos: Set[Fact],
@@ -41,6 +41,8 @@ case class Clause private (
 
   override def toString(): String = display()
 
+  /** cf Def 1 in Blanchet2011
+    */
   def subsumes(that: Clause): Boolean =
     val s = getSubstitution(this.concl.msg, that.concl.msg)
     s match
@@ -52,6 +54,8 @@ case class Clause private (
     .reduceOption(_ ++ _)
     .getOrElse(Set()) ++ concl.msg.vars
 
+  /** renames the variables occuring in both clauses
+    */
   def withVarsDifferentFrom(that: Clause): Clause =
     val overlapping = that.vars.intersect(this.vars)
     val allVars = that.vars ++ this.vars
@@ -78,7 +82,7 @@ object Clause:
       label: Option[String] = None
   ): Clause =
     // check that all variables in the conclusion are defined in the hypothesis
-    // might be very costly
+    // TODO might be very costly
     require(
       concl.msg.vars.forall(
         hypos

@@ -33,13 +33,10 @@ object Substitution:
   val empty = Substitution(Map())
   def single(v: Term.Var, t: Term): Substitution = Substitution(Map((v, t)))
 
-  /** @param t1
-    * @param t2
-    * @return
+  /** @return
     *   a substitution s such that s(t1) = t2
     */
   def getSubstitution(t1: Term, t2: Term): Option[Substitution] =
-    // println(s"getSubstitution($t1, $t2)")
     (t1, t2) match
       case (v: Var, t) => Some(Substitution.single(v, t))
       case (_, _: Var) => None
