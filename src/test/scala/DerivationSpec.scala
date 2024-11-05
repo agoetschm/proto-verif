@@ -48,7 +48,6 @@ class DerivationSpec extends munit.FunSuite {
 
     val r3 = Clause(Set(att(g(x))), att(f(x)))
     val rs2 = saturate(Set(r1, r2, r3))
-    // pprintln(rs2)
     assertEquals(rs2.size, 3)
   }
 

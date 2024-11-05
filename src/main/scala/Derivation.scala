@@ -11,12 +11,10 @@ object Derivation:
       sel: Clause => Option[Fact] // selects one of the hypothesis, if any
   )(r1: Clause, r2: Clause): Option[Clause] =
     val r2p = r2.withVarsDifferentFrom(r1)
-    // println(s"resolve: r1=$r1 r2=$r2p")
     for
       hypo <- sel(r2p)
       unifier <- unify(hypo.msg, r1.concl.msg)
     yield
-      // println(s"  unifier: $unifier")
       val newHypos = (r1.hypos ++ (r2p.hypos - hypo)).map(unifier(_))
       val newConcl = unifier(r2p.concl)
       val resolutionOf = Some((r1, r2, unifier))
@@ -53,24 +51,12 @@ object Derivation:
         rSel <- rsSel
         rFree <- rsFree
       yield basicResolution(rFree, rSel)
-      // println()
-      // println("------ saturate0: new resolutions")
-      // rsNew.flatten.foreach(r => println(r.withoutResolution))
-      // println("------ saturate0: end new resolutions")
       val (rsSelNew, rsFreeNew) =
         rsNew.flatten.partition(selectFirstHypo(_).isDefined)
       val rsSelNext = rsSelNew.foldRight(rsSel)(add)
       val rsFreeNext = rsFreeNew.foldRight(rsFree)(add)
-      // println("------ saturate0: rsSelNext")
-      // rsSelNext.foreach(r => println(r.withoutResolution))
-      // println("------ saturate0: rsFreeNext")
-      // rsFreeNext.foreach(r => println(r.withoutResolution))
-      // when fixed point: return free rules
       if rsSelNext == rsSel && rsFreeNext == rsFree
-      then
-        // println("------ saturate resulting clauses:")
-        // rsFreeNext.foreach(r => println(r.withoutResolution))
-        rsFreeNext
+      then rsFreeNext
       else saturate0(rsSelNext, rsFreeNext)
 
     saturate0(
@@ -88,9 +74,6 @@ object Derivation:
         history: List[Clause],
         depth: Int
     ): Set[Clause] =
-      // println(s"-------------------------- derive depth=$depth")
-      // println("history:")
-      // history.foreach(println)
       if depth > 10 then Set()
       else if history.exists(_.subsumes(r)) then
         Set() // stop here because of subsumption loop

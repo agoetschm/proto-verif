@@ -11,7 +11,6 @@ object Unification:
       ts: List[(Term, Term)],
       s: Substitution
   ): Option[Substitution] =
-    // println(s"unifier0($ts, $s)")
     ts match
       case Nil => Some(s)
       case (t1, t2) :: ts =>
