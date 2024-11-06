@@ -33,7 +33,12 @@ object Substitution:
   val empty = Substitution(Map())
   def single(v: Term.Var, t: Term): Substitution = Substitution(Map((v, t)))
 
-  /** @return
+  /** Computes the substitution from one term to another, i.e. the mapping of
+    * variables that transforms a term into another. This simple procedure works
+    * only because the substitution is done on one side of the equation. The
+    * more generic procedure is unification, see [[Unification]].
+    *
+    * @return
     *   a substitution s such that s(t1) = t2
     */
   def getSubstitution(t1: Term, t2: Term): Option[Substitution] =

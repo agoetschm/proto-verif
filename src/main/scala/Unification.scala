@@ -2,11 +2,19 @@ import Term._
 import scala.annotation.tailrec
 
 object Unification:
+  /** Computes a unifier, which is a substitution that maps each input term to a
+    * same term.
+    *
+    * https://en.wikipedia.org/wiki/Unification_(computer_science)
+    *
+    * Implemented using the algo by Martelli & Montanari 
+    *
+    * @return
+    *   a subtitution s such that s(t1) = s(t2)
+    */
   def unify(t1: Term, t2: Term): Option[Substitution] =
     unify0(List((t1, t2)), Substitution.empty)
 
-  // https://en.wikipedia.org/wiki/Unification_(computer_science)
-  // Martelli & Montanari algo
   @tailrec def unify0(
       ts: List[(Term, Term)],
       s: Substitution

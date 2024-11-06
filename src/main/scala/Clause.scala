@@ -41,7 +41,7 @@ case class Clause private (
 
   override def toString(): String = display()
 
-  /** cf Def 1 in Blanchet2011
+  /** cf Def 1 in [Blanchet2011]
     */
   def subsumes(that: Clause): Boolean =
     val s = getSubstitution(this.concl.msg, that.concl.msg)

@@ -1,13 +1,8 @@
 = Attempting to re-implement ProVerif in Scala - an introduction to protocol verification
+:toc:
 
-NOTE: I'm not an expert in the domain, just tried to get a deeper understanding of protocol verification by developing a very basic and incomplete implementation of ProVerif, and I'm sharing my experience here. The intro is meant for someone with a software engineer background but no knowledge about formal verification.
-
-// Once upon a time, Alice and Bob were madly in love but living in very distant cities.
-// The only way for them to express their affection was to write each other letters.
-// Unfortunatley, the postman was also in love with Alice.
-// He opened all the exchanged letters and would not deliver them if their content was making him jealous.
-
-// Luckily, Alice and Bob managed to agree on a technique to exchange encryption keys and 
+NOTE: I'm not an expert in the domain, just tried to get a deeper understanding of protocol verification by developing a very basic and incomplete implementation of ProVerif, and I'm sharing my experience here. 
+This intro is meant for someone with a software engineer background but no knowledge about formal verification.
 
 [quote]
 Once upon a time, Alice and Bob were living in a country under a dictatorship and wanted to exchange letters imagining a better government.
@@ -16,7 +11,8 @@ Luckily, Alice and Bob had some knowledge in cryptography and managed to exchang
 //But what if they hadn't managed to exchange their keys?
 
 .Protocol where Alice uses Bob's public key to encrypt a message. `aenc` and `adec` stand for asymmetric encryption and decryption, `sk` and `pk` represent a pair of secret and public keys.
-image::images/proto-simple.png[][Simple protocol,400]
+image::images/proto-simple.png[][Simple protocol,500]
+
 
 == Why do protocols need to be verified?
 
@@ -50,7 +46,7 @@ This protocol is the classical example in the context of protocol verification, 
 The idea is that Alice and Bob exchange https://en.wikipedia.org/wiki/Cryptographic_nonce[nonces] (n~a~ and n~b~) encrypted with the public key of the recipient (pk~a~ and pk~b~), which lets make sure that they are indeed communicating with each other.
 
 .Needham Schroeder protocol. The first message is the encryption of the pair (pk~a~, n~a~), which represent Alice's public key and nonce, with Bob's public key. The other messages follow the same pattern.
-image::images/proto-needham.png[][Needham Schroeder protocol,400]
+image::images/proto-needham.png[][Needham Schroeder protocol,500]
 
 *Protocol as processes*.
 The issue with the representation above is that some things are left implicit.
@@ -80,16 +76,57 @@ Pb(skb)     = in(c,y)
               if fst(adec(z,skb)) = a then continue
 ----
 
-When executed in parallel, these two processes execute the Needham Schroeder protocol.
+When executed in parallel, these two processes run the Needham Schroeder protocol.
 
 
 == ProVerif
 
 The interest of modeling protocols using a formal model, as we did above using the applied pi calculus, is to analyze them in order to check whether they fullfill some properties.
-In this section, we are going to take a look at the ProVerif protocol verifier [<<Blanchet2011>>] and run a simplified implementation to analyze the Needham Schroeder protocol to detect the https://doi.org/10.1016/0020-0190(95)00144-2[well-known attack by Lowe].
+In this section, we are going to take a look at the https://bblanche.gitlabpages.inria.fr/proverif/[ProVerif] protocol verifier [<<Blanchet2011>>] and run a simplified implementation to analyze the Needham Schroeder protocol and detect the https://doi.org/10.1016/0020-0190(95)00144-2[well-known attack by Lowe].
 
-// * overview 
+=== Resolution algorithm
 
+The idea is that an attacker, with some limited knowledge (*facts*) and abilities (*rules*), attempts to derive knowledge that should remain secret.
+ProVerif verifies whether this is the case or not for a given protocol.
+In the case of the Needham Schroeder protocol, an attacker controling the network should not be able to learn any of the nonces.
+What I explain below quite roughly is detailed in Section 2 of [<<Blanchet2011>>] or in the Section 8.2.6 of the tutorial [<<Cortier2014>>].
+
+*Horn clauses*
+ProVerif first converts the protocol into Horn clauses, which we also call rules.
+A Horn clause is a logical implication stating that if a set of facts are true, then another is true as well.
+For example, the rule `attacker(aenc(m,pk)) and attacker(sk) => attacker(m)` states that an attacker knowing a message encrypted with a public key and the corresponding secret key can learn the plaintext message.
+ProVerif then tries to combine the rules and facts available to the attacker to reach a target fact.
+If it manages, it means that an attack was found and we say that the target fact is derivable.
+
+*Derivability*
+The resolution algorithm of ProVerif works backward: it start from the target and tries to recontruct if from available rules and facts.
+To make the process more efficient, a first phase of the algorithm called `saturation` simplifies the set of available rules by combining them.
+
+.Example of derivation tree. The fact F is derivable from the facts F~1~, F~3~, F~4~, F~5~ using the rules r~1~ and r~2~.
+image::images/derivation.png[][Example of derivation tree,300]
+
+=== Simplified implementation
+
+// * depth search was getting lost -> I put a limit
+
+NOTE: In most of my pet projects which stem from interest more than from a need, I often reach a point where I get a bit tired of it.
+This is the case now for this post and will stop here for the time being.
+If you get here and want to know more about it, feel free to reach out and I might get motivated to finish this properly!
+
+The code is split into files with names explicit enough to link them to the concepts of the research paper.
+To start with the higher level code, you should take a look at link:src/main/scala/Derivation.scala[Derivation.scala].
+If you prefer to start with the lower level building blocks, here is a list you can follow.
+Again, see [<<Blanchet2011>>] or [<<Cortier2014>>] for explanations of the concepts.
+
+* link:src/main/scala/Term.scala[Term]: a term is an expression that can be a variable or a function of variables. The definition is recursive, since a term can for example be a function of a fuction.
+* link:src/main/scala/Substitution.scala[Substitution]: a substitution is a mapping from variables to terms. It transforms a term into another one by assigning a "value" (which can be any term) to the variables it contains.
+* link:src/main/scala/Unification.scala[Unification]: a unifier is a substitution which transforms each term t~i~ of a set into the same term t.
+* link:src/main/scala/Clause.scala[Clause]: a Horn clause, which we also call rule. A protocol is a set of rules, representing the abilities of the attacker to obtain a fact (some knowledge) from other facts.
+* link:src/main/scala/Derivation.scala[Derivation]: this file contains the simplified ProVerif derivation algorithm.
+
+=== Finding and fixing Lowe's attack
+
+The test file link:src/test/scala/NeedhamSchroeder.scala[NeedhamSchroeder.scala] contains a representation of the Needham Schroeder protocol in Horn clauses and derives Lowe's attack.
 
 
 [bibliography]
@@ -98,4 +135,4 @@ In this section, we are going to take a look at the ProVerif protocol verifier [
 * [[[Blanchet2012]]] B Blanchet. *Security protocol verification: Symbolic and computational models*. International conference on principles of security and trust. 2012. https://inria.hal.science/hal-00863388/file/BlanchetETAPS12.pdf[View].
 * [[[Cortier2014]]] V Cortier, S Kremer. *Formal Models and Techniques for Analyzing Security Protocols: A Tutorial*. Foundations and Trends in Programming Languages. 2014. http://dx.doi.org/10.1561/2500000001[View].
 * [[[Abadi2017]]] M Abadi, B Blanchet, C Fournet. *The applied pi calculus: Mobile values, new names, and secure communication*. Journal of ACM. 2017. http://seclab.stanford.edu/pcl/cs259/WWW06/papers/p104-abadi.pdf[View].
-* [[[Blanchet2011]]] B Blanchet. *Using Horn clauses for analyzing security protocols*. Formal Models and Techniques for Analyzing Security Protocols. 2011.
+* [[[Blanchet2011]]] B Blanchet. *Using Horn clauses for analyzing security protocols*. Formal Models and Techniques for Analyzing Security Protocols. 2011. https://www.researchgate.net/publication/228747656_Using_Horn_Clauses_for_Analyzing_Security_Protocols[View]
