@@ -2,7 +2,7 @@
 
 **Note**: this project is not completely finished. 
 The derivation results might be wrong, the output would first need to be made clearer to enable further developement/debugging. 
-See my [blog post](TODO) for an explanation and a guide through the code structure.
+See my [blog post](https://ango.dev/blog/proto-verif/) (or [here](./README_blog.adoc)) for an explanation and a guide through the code structure.
 
 ## Getting started
 
